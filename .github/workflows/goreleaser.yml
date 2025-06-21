@@ -1,0 +1,27 @@
+name: Checkout and Create Release Version
+
+on:
+  push:
+    tags:
+      - "*"
+
+jobs:
+  goreleaser:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: stable
+      - uses: mlugg/setup-zig@v2
+      - name: Setup environment
+        run: |
+          WEB_VERSION=$(curl -sSL "https://api.github.com/repos/OpenListTeam/OpenList-Frontend/releases/latest" | jq -r '.tag_name')
+          echo "WEB_VERSION=$WEB_VERSION" >> $GITHUB_ENV
+      - uses: goreleaser/goreleaser-action@v6
+        with:
+          distribution: goreleaser
+          version: '~> v2'
+          args: release --clean
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
